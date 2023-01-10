@@ -1,0 +1,171 @@
+#Grouping Sources
+spring:
+  profiles:
+    group:
+      "prod": "base-config, hikari-default-config, cotae-prod-database, prod-user-security"
+      "dev": "base-config, hikari-default-config, cotae-dev-database, local-user-security"
+      "local": "base-config, hikari-default-config, cotae-local-database, local-user-security"
+    active: local # Default is local Run.
+---
+#Tomcat Ports
+server:
+  port: 80
+  servlet:
+    session:
+      timeout: 5000
+
+spring:
+  #Dev tools Endpoints
+  devtools:
+    restart:
+      exclude: static/**, public/**, resources/**
+  #Common Profiles
+  config:
+    activate:
+      on-profile: base-config
+  #Swagger configurations
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  #Database Naming rule
+  jpa:
+    hibernate:
+      naming: # camelCase -> under_score_case, '.' -> '_', UPPER_CASE is not allowed. changed to lower_case
+        implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+        physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+    open-in-view: false #About Lazy fetch
+
+#Actuator
+management:
+  endpoint:
+    #    logfile:
+    #      external-file: ~/logback.log
+    health:
+      show-details: always
+  trace:
+    http:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,loggers,metrics,mappings,threaddump,conditions,info,heapdump
+      base-path: /api/actuator
+      path-mapping:
+        loggers: logs
+        httptrace: trace
+info:
+  spring:
+    framework:
+      version: ${spring-framework.version}
+  java:
+    version: ${java.version}
+  platform:
+    version: 0.0.1-SNAPSHOT
+---
+spring:
+  config:
+    activate:
+      on-profile: hikari-default-config
+  datasource:
+    hikari: #DB Connection Pool - Careful Deadlock issue
+      transaction-isolation: TRANSACTION_REPEATABLE_READ # Not use SERIALIZABLE
+      maximum-pool-size: 10
+      minimum-idle: 10 # Hikari Powerfully recommended. Same value as maximum-pool-size
+      connection-timeout: 5000 #5s Timeout.
+      validation-timeout: 3000 #3s Timeout
+      connection-test-query: SELECT 1
+      idle-timeout: 60000
+      max-lifetime: 1800000
+      pool-name: platform_hikari_pool
+---
+spring:
+  config:
+    activate:
+      on-profile: coate-prod-database
+  datasource:
+    driver-class-name: org.mariadb.jdbc.Driver
+    jdbcUrl: jdbc:mariadb://${DB_PROD_SVC}:${DB_PROD_PORT}/${DB_NAME}?serverTimezone=Asia/Seoul # For Hikari
+    url: jdbc:mariadb://${DB_PROD_SVC}:${DB_PROD_PORT}/${DB_NAME}?serverTimezone=Asia/Seoul
+    username: ${DB_USER_NAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    generate-ddl: false
+  sql:
+    init:
+      mode: never
+---
+spring:
+  config:
+    activate:
+      on-profile: cotae-dev-database
+  datasource:
+    driver-class-name: org.mariadb.jdbc.Driver
+    jdbcUrl: jdbc:mariadb://${DB_DEV_SVC}:${DB_DEV_PORT}/${DB_NAME}?serverTimezone=Asia/Seoul # For Hikari
+    url: jdbc:mariadb://${DB_DEV_SVC}:${DB_DEV_PORT}/${DB_NAME}?serverTimezone=Asia/Seoul
+    username: ${DB_USER_NAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    generate-ddl: false
+    properties:
+      hibernate:
+        format_sql: true #Show Beautify sql
+
+logging:
+  level:
+    org:
+      hibernate:
+        type:
+          descriptor:
+            sql: trace
+---
+spring:
+  config:
+    activate:
+      on-profile: cotae-local-database
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:test;MODE=MariaDB;DATABASE_TO_LOWER=TRUE
+    jdbcUrl: jdbc:h2:mem:test;MODE=MariaDB;DATABASE_TO_LOWER=TRUE
+    username: admin
+    password: admin
+  h2:
+    console:
+      enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: create
+    database: h2
+  sql:
+    init:
+      mode: embedded
+---
+spring:
+  config:
+    activate:
+      on-profile: local-user-security
+
+token:
+  access-expired-time: 200000
+  refresh-expired-time: 2000000
+  refresh-token-name: refresh-token
+  access-token-name: access-token
+  secret: $2a$12$/v.L6rSAE2zH15M8zXMl.efQppOP50kunATCeevsZeCw6vU.6x4fS # thisistesttoken
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod-user-security
+
+token:
+  access-expired-time: ${access-expired-timeout}
+  refresh-expired-time: ${refresh-expired-timeout}
+  refresh-token-name: ${refresh-token-name}
+  access-token-name: ${access-token-name}
+  secret: ${secret-token}
