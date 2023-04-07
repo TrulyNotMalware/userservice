@@ -61,6 +61,9 @@ dependencies {
     //jwt
     implementation 'io.jsonwebtoken:jjwt:0.9.1'
 
+    //Saga - Axon frameworks - MVC
+    implementation 'org.axonframework:axon-spring-boot-starter:4.7.0'
+    implementation 'org.axonframework:axon-configuration:4.7.0'
 }
 
 tasks.named('test') {
