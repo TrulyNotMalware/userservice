@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
-import javax.servlet.http.Cookie;
+import jakarta.servlet.http.Cookie;
 
 @Slf4j
 @Component

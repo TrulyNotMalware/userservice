@@ -33,7 +33,7 @@ public class SecurityConfig{ // extends WebSecurityConfigurerAdapter is deprecat
 
     @Bean
     public WebSecurityCustomizer configure(){
-        return (web) -> web.ignoring().mvcMatchers(
+        return (web) -> web.ignoring().requestMatchers(
                 "/swagger-ui/**",
                 "/api/user/auth/**",//Register, login, refresh
                 "/h2-console/**"
@@ -50,28 +50,39 @@ public class SecurityConfig{ // extends WebSecurityConfigurerAdapter is deprecat
         AuthenticationManager authenticationManager = authenticationManager(httpSecurity.getSharedObject(AuthenticationConfiguration.class));
         LoginAuthenticationFilter authenticationFilter = authenticationFilter(authenticationManager);
         httpSecurity.addFilterAt(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
-        httpSecurity.authorizeRequests().antMatchers("/**").permitAll()
+
+        httpSecurity.authorizeHttpRequests(auth ->
+                        auth.requestMatchers("/**").permitAll()
+                        .requestMatchers("/api/user/register/**").permitAll()
+                        .anyRequest().authenticated())
+                .formLogin(form -> form.loginPage("/api/user/auth/login").defaultSuccessUrl("/"))
+                .logout(config -> config.logoutRequestMatcher(new AntPathRequestMatcher("/api/user/auth/logout"))
+                        .deleteCookies("refresh-token")
+                        .logoutSuccessUrl("/")
+                        .invalidateHttpSession(true));
+        // DEPRECATED SPRING 6 AND UPPER
+//        httpSecurity.authorizeRequests().antMatchers("/**").permitAll()
 //        httpSecurity
 //                .and()
 //                    .csrf().ignoringAntMatchers("/h2-console/**")
 //                .and()
 //                    .headers()
 //                    .addHeaderWriter(new XFrameOptionsHeaderWriter(XFrameOptionsHeaderWriter.XFrameOptionsMode.SAMEORIGIN))
-                .and()
-                .authorizeRequests()
-                .antMatchers("/api/user/register/**")
-                .permitAll()
-                .anyRequest().authenticated()
-                .and()
-                .formLogin()
-                .loginPage("/api/user/auth/login")
-                .defaultSuccessUrl("/")
-                .and()
-                .logout()
-                .logoutRequestMatcher(new AntPathRequestMatcher("/api/user/auth/logout"))
-                .deleteCookies("refresh-token")
-                .logoutSuccessUrl("/")
-                .invalidateHttpSession(true);
+//                .and()
+//                .authorizeRequests()
+//                .antMatchers("/api/user/register/**")
+//                .permitAll()
+//                .anyRequest().authenticated()
+//                .and()
+//                .formLogin()
+//                .loginPage("/api/user/auth/login")
+//                .defaultSuccessUrl("/")
+//                .and()
+//                .logout()
+//                .logoutRequestMatcher(new AntPathRequestMatcher("/api/user/auth/logout"))
+//                .deleteCookies("refresh-token")
+//                .logoutSuccessUrl("/")
+//                .invalidateHttpSession(true);
         httpSecurity.csrf().disable();
 
         return httpSecurity.build();

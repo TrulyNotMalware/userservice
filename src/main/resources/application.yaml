@@ -32,7 +32,7 @@ spring:
     hibernate:
       naming: # camelCase -> under_score_case, '.' -> '_', UPPER_CASE is not allowed. changed to lower_case
         implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
-        physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
     open-in-view: false #About Lazy fetch
 
 #Actuator
@@ -42,9 +42,9 @@ management:
     #      external-file: ~/logback.log
     health:
       show-details: always
-  trace:
-    http:
-      enabled: true
+#  trace:
+#    http:
+#      enabled: true
   endpoints:
     web:
       exposure:
@@ -210,7 +210,7 @@ spring:
     activate:
       on-profile: axon-local-setting
   application:
-    name: cotae-eventsourcing-user-svc
+    name: cotae-user-svc
 
 axon:
   serializer:
@@ -218,7 +218,7 @@ axon:
     messages: jackson
     events: jackson
   axonserver:
-    servers: localhost:8124
+    servers: ${AXON_SERVER_HOST}:${AXON_SERVER_PORT}
 ---
 spring:
   config:

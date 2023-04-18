@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.text.SimpleDateFormat;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -27,6 +28,16 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class UserController {
     private final UserService userService;
     private final RefreshTokenService refreshTokenService;
+
+    @PostMapping(value = "/auth/register2")
+    public CompletableFuture<Object> res(
+            @RequestBody ConcurrentHashMap<String, Object> body
+    ){
+        String email = (String) body.remove("userEmail");
+        log.debug("Register new user {}",email);
+        String password = (String) body.remove("password");
+        return this.userService.createUser(email, password);
+    }
 
     @PostMapping(value = "/auth/register", produces = MediaTypes.HAL_JSON_VALUE)
     public EntityModel<UserDto> doRegister(
