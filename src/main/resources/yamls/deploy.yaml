@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devplatform-usersvc
+  namespace: dev-platform
+  labels:
+    app: devplatform-usersvc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: devplatform-usersvc
+  template:
+    metadata:
+      labels:
+        app: devplatform-usersvc
+    spec:
+      containers:
+        - name: devplatform-usersvc
+          image: harbor.registry.notypie.dev/test_project/usersvc:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: USERSVC_PORT
+              value: "80"
+            - name: TNS_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: devplatform-usersvc-secret
+                  key: TNS_NAME
+            - name: ORACLE_WALLET_DIRECTORY
+              valueFrom:
+                secretKeyRef:
+                  name: devplatform-usersvc-secret
+                  key: ORACLE_WALLET_DIRECTORY
+            - name: ORACLE_USER_NAME
+                valueFrom:
+                  secretKeyRef:
+                    name: devplatform-usersvc-secret
+                    key: ORACLE_USER_NAME
+            - name: ORACLE_DB_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: devplatform-usersvc-secret
+                    key: ORACLE_DB_PASSWORD
+            - name: AXON_SERVER_HOST
+                valueFrom:
+                  secretKeyRef:
+                    name: devplatform-usersvc-secret
+                    key: AXON_SERVER_HOST
+            - name: AXON_SERVER_PORT
+                valueFrom:
+                  secretKeyRef:
+                    name: devplatform-usersvc-secret
+                    key: AXON_SERVER_PORT
+          ports:
+            - name: http
+              containerPort: 80

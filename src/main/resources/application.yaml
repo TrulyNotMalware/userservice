@@ -9,7 +9,7 @@ spring:
 ---
 #Tomcat Ports
 server:
-  port: 8080
+  port: ${USERSVC_PORT}
   servlet:
     session:
       timeout: 5000
@@ -147,7 +147,7 @@ spring:
       hibernate:
         format_sql: true #Show Beautify sql2
     database: ORACLE
-    database-platform: org.hibernate.dialect.Oracle12cDialect
+    database-platform: org.hibernate.dialect.OracleDialect
   h2: # Disable Local h2 database.
     console:
       enabled: false
