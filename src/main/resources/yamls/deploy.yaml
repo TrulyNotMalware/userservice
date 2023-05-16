@@ -19,6 +19,10 @@ spec:
         - name: devplatform-usersvc
           image: harbor.registry.notypie.dev/test_project/usersvc:latest
           imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: "/Wallet"
+              name: oracle_wallet
+              readOnly: true
           env:
             - name: USERSVC_PORT
               value: "80"
@@ -33,25 +37,29 @@ spec:
                   name: devplatform-usersvc-secret
                   key: ORACLE_WALLET_DIRECTORY
             - name: ORACLE_USER_NAME
-                valueFrom:
-                  secretKeyRef:
-                    name: devplatform-usersvc-secret
-                    key: ORACLE_USER_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: devplatform-usersvc-secret
+                  key: ORACLE_USER_NAME
             - name: ORACLE_DB_PASSWORD
-                valueFrom:
-                  secretKeyRef:
-                    name: devplatform-usersvc-secret
-                    key: ORACLE_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: devplatform-usersvc-secret
+                  key: ORACLE_DB_PASSWORD
             - name: AXON_SERVER_HOST
-                valueFrom:
-                  secretKeyRef:
-                    name: devplatform-usersvc-secret
-                    key: AXON_SERVER_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: devplatform-usersvc-secret
+                  key: AXON_SERVER_HOST
             - name: AXON_SERVER_PORT
-                valueFrom:
-                  secretKeyRef:
-                    name: devplatform-usersvc-secret
-                    key: AXON_SERVER_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: devplatform-usersvc-secret
+                  key: AXON_SERVER_PORT
           ports:
             - name: http
               containerPort: 80
+      volumes:
+        - name: oracle_wallet
+          secret:
+            secretName: oracle-wallet-config
