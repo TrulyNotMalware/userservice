@@ -10,9 +10,18 @@ import jakarta.persistence.*;
 @Getter
 @NoArgsConstructor
 @DiscriminatorColumn(name = "DTYPE")
+@SequenceGenerator(
+        name = "USER_SQ_GENERATOR",
+        sequenceName = "USER_SEQ",
+        initialValue = 1,
+        allocationSize = 1
+)//Oracle Database - AutoIncrements Support.
 public class UserEntity {
     @Id
-    @GeneratedValue
+    @GeneratedValue(
+            strategy = GenerationType.SEQUENCE,
+            generator = "USER_SEQ"
+    )
     @Column(name = "userId")
     private Long id;
     private String email;
