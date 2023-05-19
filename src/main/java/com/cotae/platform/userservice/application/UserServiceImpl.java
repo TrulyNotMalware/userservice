@@ -3,6 +3,8 @@ package com.cotae.platform.userservice.application;
 import com.cotae.platform.userservice.commands.UserCreateCommand;
 import com.cotae.platform.userservice.domain.UserDomain;
 import com.cotae.platform.userservice.dto.UserDto;
+import com.cotae.platform.userservice.dto.UserRegisterResponseDto;
+import com.cotae.platform.userservice.global.status.ResponseStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.gateway.CommandGateway;
@@ -37,11 +39,13 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public CompletableFuture<Object> createUser(String email, String password){
+    public UserRegisterResponseDto createUser(String email, String password){
         //중복가입 방지, Email 여부 확인.
         if(this.userDomain.isDuplicatedEmail(email)){
             throw new RuntimeException("Email Already signed.");
         }
-        return this.commandGateway.send(new UserCreateCommand(email, password));
+        // FIXME Keep in mind that .join() is blocking!
+        String authEmail = this.commandGateway.send(new UserCreateCommand(email, password)).join().toString();
+        return new UserRegisterResponseDto(authEmail, ResponseStatus.SUCCESSFULLY_WORKED,"Successfully signed.");
     }
 }

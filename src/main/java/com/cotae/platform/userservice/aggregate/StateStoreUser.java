@@ -19,13 +19,22 @@ import static org.axonframework.modelling.command.AggregateLifecycle.markDeleted
 @Aggregate
 @DiscriminatorColumn(name = "DTYPE")
 @Entity(name = "stateuser")
+@SequenceGenerator(
+        name = "SS_USER_SQ_GENERATOR",
+        sequenceName = "SS_USER_SEQ",
+        initialValue = 1,
+        allocationSize = 1
+)
 public class StateStoreUser {
 
-    @AggregateIdentifier
     @Id
-    @GeneratedValue
+    @GeneratedValue(
+            strategy = GenerationType.SEQUENCE,
+            generator = "SS_USER_SEQ"
+    )
     @Column(name = "userId")
     private Long id;
+    @AggregateIdentifier
     @Column(name = "email")
     private String email;
     @Column(name = "password")
@@ -41,6 +50,6 @@ public class StateStoreUser {
         this.password = new BCryptPasswordEncoder().encode(command.getPassword());
 
         //Apply to DB.
-        apply(new StateUserCreationEvent(this.email, this.password));
+        apply(new StateUserCreationEvent(this.id, this.email, this.password));
     }
 }

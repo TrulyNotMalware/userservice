@@ -4,6 +4,7 @@ import com.cotae.platform.userservice.application.RefreshTokenService;
 import com.cotae.platform.userservice.application.UserService;
 import com.cotae.platform.userservice.dto.JwtDto;
 import com.cotae.platform.userservice.dto.UserDto;
+import com.cotae.platform.userservice.dto.UserRegisterResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.hateoas.EntityModel;
@@ -30,13 +31,19 @@ public class UserController {
     private final RefreshTokenService refreshTokenService;
 
     @PostMapping(value = "/auth/register2")
-    public CompletableFuture<Object> res(
+    public EntityModel<UserRegisterResponseDto> eventRegister(
             @RequestBody ConcurrentHashMap<String, Object> body
     ){
-        String email = (String) body.remove("userEmail");
+        String email = (String) body.remove("email");
         log.debug("Register new user {}",email);
         String password = (String) body.remove("password");
-        return this.userService.createUser(email, password);
+        UserRegisterResponseDto responseDto = this.userService.createUser(email, password);
+
+        Links allLinks;
+        Link selfLink = linkTo(methodOn(UserController.class).eventRegister(body)).withSelfRel();
+        Link logout = linkTo(methodOn(UserController.class).logout(null)).withRel("logout");
+        allLinks = Links.of(selfLink, logout);
+        return EntityModel.of(responseDto, allLinks);
     }
 
     @PostMapping(value = "/auth/register", produces = MediaTypes.HAL_JSON_VALUE)
