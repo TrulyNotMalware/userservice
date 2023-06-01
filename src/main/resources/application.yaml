@@ -2,14 +2,14 @@
 spring:
   profiles:
     group:
-      "prod": "base-config, hikari-default-config, cotae-prod-database, prod-user-security"
-      "dev": "base-config, hikari-default-config, cotae-dev-database, local-user-security"
-      "local": "base-config, hikari-default-config, cotae-local-database, local-user-security"
+      "prod": "base-config, hikari-default-config, cotae-prod-database, prod-user-security, axon-prod-setting"
+      "dev": "base-config, hikari-default-config, cotae-dev-oracle-database, local-user-security, axon-local-setting"
+      "local": "base-config, hikari-default-config, cotae-local-database, local-user-security, axon-local-setting"
     active: local # Default is local Run.
 ---
 #Tomcat Ports
 server:
-  port: 80
+  port: ${USERSVC_PORT}
   servlet:
     session:
       timeout: 5000
@@ -32,7 +32,7 @@ spring:
     hibernate:
       naming: # camelCase -> under_score_case, '.' -> '_', UPPER_CASE is not allowed. changed to lower_case
         implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
-        physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
     open-in-view: false #About Lazy fetch
 
 #Actuator
@@ -42,9 +42,9 @@ management:
     #      external-file: ~/logback.log
     health:
       show-details: always
-  trace:
-    http:
-      enabled: true
+#  trace:
+#    http:
+#      enabled: true
   endpoints:
     web:
       exposure:
@@ -73,7 +73,7 @@ spring:
       minimum-idle: 10 # Hikari Powerfully recommended. Same value as maximum-pool-size
       connection-timeout: 5000 #5s Timeout.
       validation-timeout: 3000 #3s Timeout
-      connection-test-query: SELECT 1
+      connection-test-query: SELECT 1 #ORACLE Database Not works.
       idle-timeout: 60000
       max-lifetime: 1800000
       pool-name: platform_hikari_pool
@@ -100,7 +100,7 @@ spring:
 spring:
   config:
     activate:
-      on-profile: cotae-dev-database
+      on-profile: cotae-dev-mariadb-database
   datasource:
     driver-class-name: org.mariadb.jdbc.Driver
     jdbcUrl: jdbc:mariadb://${DB_DEV_SVC}:${DB_DEV_PORT}/${DB_NAME}?serverTimezone=Asia/Seoul # For Hikari
@@ -116,6 +116,41 @@ spring:
       hibernate:
         format_sql: true #Show Beautify sql
 
+logging:
+  level:
+    org:
+      hibernate:
+        type:
+          descriptor:
+            sql: trace
+---
+spring:
+  config:
+    activate:
+      on-profile: cotae-dev-oracle-database
+  datasource:
+    driver-class-name: oracle.jdbc.OracleDriver
+    url: jdbc:oracle:thin:@${TNS_NAME}?TNS_ADMIN=${ORACLE_WALLET_DIRECTORY}
+    username: ${ORACLE_USER_NAME}
+    password: ${ORACLE_DB_PASSWORD}
+
+    hikari:
+      connection-test-query: SELECT 1 FROM DUAL # Oracle Database Connection Query.
+      transaction-isolation: TRANSACTION_READ_COMMITTED # READ_COMMITTED and SERIALIZABLE are the only valid transaction levels ( Oracle )
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    generate-ddl: false
+    properties:
+      hibernate:
+        format_sql: true #Show Beautify sql2
+    database: ORACLE
+    database-platform: org.hibernate.dialect.OracleDialect
+  h2: # Disable Local h2 database.
+    console:
+      enabled: false
 logging:
   level:
     org:
@@ -169,3 +204,33 @@ token:
   refresh-token-name: ${refresh-token-name}
   access-token-name: ${access-token-name}
   secret: ${secret-token}
+---
+spring:
+  config:
+    activate:
+      on-profile: axon-local-setting
+  application:
+    name: cotae-user-svc
+
+axon:
+  serializer:
+    general: jackson
+    messages: jackson
+    events: jackson
+  axonserver:
+    servers: ${AXON_SERVER_HOST}:${AXON_SERVER_PORT}
+---
+spring:
+  config:
+    activate:
+      on-profile: axon-prod-setting
+  application:
+    name: ${PROD_APPLICATION_NAME}
+
+axon:
+  serializer:
+    general: jackson
+    messages: jackson
+    events: jackson
+  axonserver:
+    servers: ${PROD_AXON_SERVER}:${PROD_AXON_SERVER_PORT}
